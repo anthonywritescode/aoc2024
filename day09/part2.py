@@ -35,12 +35,15 @@ def compute(s: str) -> int:
         disk.append(File(did, n1))
         disk.append(Free(n2))
 
+    searchfrom = len(disk) - 1
+
     def _pos(did: int) -> tuple[int, File]:
-        for i, segment in enumerate(reversed(disk)):
-            if isinstance(segment, File) and segment.did == did:
-                return len(disk) - i - 1, segment
-        else:
-            raise AssertionError('unreachable!')
+        nonlocal searchfrom
+        segment = disk[searchfrom]
+        while not isinstance(segment, File) or segment.did != did:
+            searchfrom -= 1
+            segment = disk[searchfrom]
+        return searchfrom, segment
 
     def _target(*, size: int, maxpos: int) -> tuple[int, Free] | None:
         for i in range(maxpos):
@@ -62,6 +65,7 @@ def compute(s: str) -> int:
                 disk[pos] = Free(segment.size)
                 disk[target_pos] = Free(target_free.size - segment.size)
                 disk.insert(target_pos, segment)
+                searchfrom += 1
 
     total = 0
     offset = 0
