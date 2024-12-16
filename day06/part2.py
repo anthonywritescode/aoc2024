@@ -44,13 +44,6 @@ def compute(s: str) -> int:
         return seen
 
     traced = {(x, y) for x, y, _ in _try(-999, -999)}
-    traced |= {(x, y) for pt in traced for x, y in support.adjacent_8(*pt)}
-    traced = {
-        (x, y) for (x, y) in traced
-        if x in bx.range
-        if y in by.range
-        if (x, y) != start
-    }
 
     bads = set()
     for cx, cy in traced:
