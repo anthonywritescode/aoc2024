@@ -183,13 +183,13 @@ def parse_coords_int(s: str) -> dict[tuple[int, int], int]:
     return coords
 
 
-def parse_coords_hash(s: str) -> set[tuple[int, int]]:
-    coords = set()
-    for y, line in enumerate(s.splitlines()):
-        for x, c in enumerate(line):
-            if c == '#':
-                coords.add((x, y))
-    return coords
+def parse_coords_hash(s: str, *, wall: str = '#') -> set[tuple[int, int]]:
+    return {
+        (x, y)
+        for y, line in enumerate(s.splitlines())
+        for x, c in enumerate(line)
+        if c == wall
+    }
 
 
 def parse_numbers_split(s: str) -> list[int]:
@@ -261,3 +261,15 @@ class Direction4(enum.Enum):
 
     def apply(self, x: int, y: int, *, n: int = 1) -> tuple[int, int]:
         return self.x * n + x, self.y * n + y
+
+    @staticmethod
+    def from_c(c: str) -> Direction4:
+        return _DIRECTION4_C[c]
+
+
+_DIRECTION4_C = {
+    '<': Direction4.LEFT,
+    '>': Direction4.RIGHT,
+    '^': Direction4.UP,
+    'v': Direction4.DOWN,
+}
