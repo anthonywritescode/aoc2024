@@ -213,6 +213,10 @@ def bounds(points: Iterable[tuple[int, ...]]) -> tuple[Bound, ...]:
     return tuple(Bound(min(dim), max(dim)) for dim in zip(*points))
 
 
+def in_bounds(pt: tuple[int, ...], bounds: tuple[Bound, ...]) -> bool:
+    return all(n in b.range for n, b in zip(pt, bounds, strict=True))
+
+
 def format_coords_hash(coords: set[tuple[int, int]]) -> str:
     bx, by = bounds(coords)
     return '\n'.join(

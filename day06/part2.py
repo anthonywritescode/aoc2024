@@ -10,49 +10,55 @@ import support
 INPUT_TXT = os.path.join(os.path.dirname(__file__), 'input.txt')
 
 
-class LoopError(ValueError):
-    pass
-
-
 def compute(s: str) -> int:
     world = support.parse_coords_hash(s)
-    bx, by = support.bounds(world)
+    bounds = support.bounds(world)
 
-    start, = (
-        (x, y)
-        for y, line in enumerate(s.splitlines())
-        for x, c in enumerate(line) if c == '^'
-    )
+    pos, = support.parse_coords_hash(s, wall='^')
 
-    def _try(cx: int, cy: int) -> set[tuple[int, int, support.Direction4]]:
-        seen = set()
-        x, y = start
-        direction = support.Direction4.UP
+    seen = set()
+    seen1 = set()
+    direction = support.Direction4.UP
+
+    def _loops(
+            pos: tuple[int, int],
+            direction: support.Direction4,
+            new_wall: tuple[int, int],
+    ) -> bool:
+        seen2 = set()
+        direction = direction.cw
         while True:
-            if x not in bx.range or y not in by.range:
-                break
-            elif (x, y) in world or (x, y) == (cx, cy):
-                x, y = direction.opposite.apply(x, y)
+            if not support.in_bounds(pos, bounds):
+                return False
+            elif pos in world or pos == new_wall:
+                pos = direction.opposite.apply(*pos)
                 direction = direction.cw
-                x, y = direction.apply(x, y)
-            elif (x, y, direction) in seen:
-                raise LoopError
+            elif (pos, direction) in seen1 or (pos, direction) in seen2:
+                return True
             else:
-                seen.add((x, y, direction))
-                x, y = direction.apply(x, y)
+                seen2.add((pos, direction))
+                pos = direction.apply(*pos)
 
-        return seen
+    found = set()
+    while True:
+        if not support.in_bounds(pos, bounds):
+            break
+        elif pos in world:
+            pos = direction.opposite.apply(*pos)
+            direction = direction.cw
+        else:
+            nextpos = direction.apply(*pos)
+            if (
+                    nextpos not in seen and
+                    nextpos not in world and
+                    _loops(pos, direction, nextpos)
+            ):
+                found.add(nextpos)
+            seen1.add((pos, direction))
+            seen.add(pos)
+            pos = nextpos
 
-    traced = {(x, y) for x, y, _ in _try(-999, -999)}
-
-    bads = set()
-    for cx, cy in traced:
-        try:
-            _try(cx, cy)
-        except LoopError:
-            bads.add((cx, cy))
-
-    return len(bads)
+    return len(found)
 
 
 INPUT_S = '''\
